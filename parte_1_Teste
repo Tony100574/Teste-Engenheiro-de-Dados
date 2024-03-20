@@ -1,0 +1,63 @@
+#  1. Quanto de rake foi gerado por cada Geração de jogadores?
+
+SELECT
+    YEAR(r.data_acesso) AS geracao,
+    SUM(r.rake) AS rake_gerado
+FROM resultado r
+GROUP BY geracao
+ORDER BY geracao ASC;
+
+
+# 2. Qual foi o rake gerado por mês?
+
+SELECT
+    MONTH(r.data_acesso) AS mes,
+    YEAR(r.data_acesso) AS ano,
+    SUM(r.rake) AS rake_gerado
+FROM resultado r
+GROUP BY mes, ano
+ORDER BY ano ASC, mes ASC;
+
+
+# 3. Qual sexo tem uma maior proporção de ganhadores?
+
+SELECT
+    c.sexo,
+    COUNT(DISTINCT r.clientes_id) AS total_jogadores,
+    SUM(CASE WHEN r.winning > 0 THEN 1 ELSE 0 END) AS total_ganhadores
+FROM resultado r
+INNER JOIN clientes c ON c.id = r.clientes_id
+GROUP BY c.sexo
+ORDER BY total_ganhadores / total_jogadores DESC;
+
+# 4. Geracao dos clientes divididos em: Veterenos,Bay Boomers,Geracao X, Geracao Y, Geracao Z e Geracar Apha
+
+
+# Cria uma coluna auxiliar para calcular a idade
+ALTER TABLE clientes ADD COLUMN idade INT;
+
+# Atualiza a coluna idade com a idade em anos
+UPDATE clientes
+SET idade = YEAR(CURRENT_DATE()) - YEAR(data_nascimento);
+
+# Cria uma nova coluna para a geração
+ALTER TABLE clientes ADD COLUMN geracao VARCHAR(20);
+
+# Define a geração de acordo com a idade
+UPDATE clientes
+SET geracao =
+CASE
+    WHEN idade >= 83 THEN 'Veteranos'
+    WHEN idade >= 63 AND idade < 83 THEN 'Baby Boomers'
+    WHEN idade >= 43 AND idade < 63 THEN 'Geração X'
+    WHEN idade >= 27 AND idade < 43 THEN 'Geração Y'
+    WHEN idade >= 12 AND idade < 27 THEN 'Geração Z'
+    ELSE 'Geração Alpha'
+END;
+
+# Exibe os resultados
+SELECT * FROM clientes;
+
+
+
+
